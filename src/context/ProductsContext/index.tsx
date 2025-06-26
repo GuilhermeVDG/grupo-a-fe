@@ -1,10 +1,10 @@
 import { createContext, useContext, useState, useEffect } from "react";
 import type { ReactNode } from "react";
-import type { Product } from "../pages/Products";
+import type { Product } from "../../pages/Products";
 import {
   fetchProducts as fetchProductsAPI,
   type RawProduct,
-} from "../services/productService";
+} from "../../services/ProductService";
 
 interface ProductsContextData {
   products: Product[];
@@ -39,7 +39,7 @@ export function ProductsProvider({ children }: { children: ReactNode }) {
                     parseFloat(r.price)) *
                     100
                 ),
-          discountedPrice: Number(r.discountPrice.toFixed(2)),
+          discountedPrice: Number(r.discountPrice),
         }));
         setProducts(mapped);
       } catch (e) {
