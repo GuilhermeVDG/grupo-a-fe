@@ -5,6 +5,7 @@ import ProductsPage from "../../pages/Products";
 import ReportPage from "../../pages/Reports";
 import AdmPage from "../../pages/AdmPage";
 import CreateProductPage from "../../components/CreateProduct";
+import EditProductPage from "../../components/EditProduct";
 
 export function Router() {
   return (
@@ -15,6 +16,7 @@ export function Router() {
         <Route path="produtos">
           <Route index element={<ProductsPage />} />
           <Route path="create" element={<CreateProductPage />} />
+          <Route path=":id/edit" element={<EditProductPage />} />
         </Route>
 
         <Route path="relatorios" element={<ReportPage />} />
