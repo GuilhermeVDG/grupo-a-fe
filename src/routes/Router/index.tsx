@@ -1,7 +1,7 @@
 import { Routes, Route } from "react-router-dom";
 import DefaultLayout from "../../layout/DefaultLayout";
 import HomePage from "../../pages/Home";
-import ProductsPage from "../../pages/Products";
+import Products from "../../pages/Products";
 import ReportPage from "../../pages/Reports";
 import AdmPage from "../../pages/AdmPage";
 import CreateProductPage from "../../components/CreateProduct";
@@ -14,7 +14,7 @@ export function Router() {
         <Route index element={<HomePage />} />
 
         <Route path="produtos">
-          <Route index element={<ProductsPage />} />
+          <Route index element={<Products />} />
           <Route path="create" element={<CreateProductPage />} />
           <Route path=":id/edit" element={<EditProductPage />} />
         </Route>

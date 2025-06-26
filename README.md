@@ -1,70 +1,66 @@
-# React + TypeScript + Vite
+# Grupo A - Frontend
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+Sistema de gerenciamento de produtos com suporte a descontos e cupons.
 
-Currently, two official plugins are available:
+## Sobre o Projeto
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Babel](https://babeljs.io/) for Fast Refresh
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/) for Fast Refresh
+Interface web para gerenciamento de produtos, permitindo:
 
-## Expanding the ESLint configuration
+- Listagem de produtos
+- Criação e edição de produtos
+- Exclusão lógica de produtos
+- Aplicação de descontos (cupom ou percentual)
+- Remoção de descontos
 
-If you are developing a production application, we recommend updating the configuration to enable type-aware lint rules:
+## Setup
 
-```js
-export default tseslint.config([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
+```bash
+# Instalar dependências
+npm install
 
-      // Remove tseslint.configs.recommended and replace with this
-      ...tseslint.configs.recommendedTypeChecked,
-      // Alternatively, use this for stricter rules
-      ...tseslint.configs.strictTypeChecked,
-      // Optionally, add this for stylistic rules
-      ...tseslint.configs.stylisticTypeChecked,
+# Rodar em desenvolvimento
+npm run dev
 
-      // Other configs...
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
+# Build para produção
+npm run build
 ```
 
-You can also install [eslint-plugin-react-x](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-x) and [eslint-plugin-react-dom](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-dom) for React-specific lint rules:
+## Variáveis de Ambiente
 
-```js
-// eslint.config.js
-import reactX from 'eslint-plugin-react-x'
-import reactDom from 'eslint-plugin-react-dom'
+Crie um arquivo `.env` na raiz do projeto:
 
-export default tseslint.config([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
-      // Enable lint rules for React
-      reactX.configs['recommended-typescript'],
-      // Enable lint rules for React DOM
-      reactDom.configs.recommended,
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
+```env
+VITE_API_URL=http://localhost:3001
 ```
-# grupo-a-fe
+
+## Funcionalidades Pendentes no Frontend
+
+As seguintes funcionalidades estão implementadas na API mas ainda não foram integradas ao frontend:
+
+### Filtros
+
+- Filtro por preço (`filter.effectivePrice=$gte:50`)
+- Filtro por estoque (`filter.stock=$eq:10`)
+- Filtro por cupom (`filter.hasCoupon=$eq:true`)
+- Busca por nome/descrição (`search=termo`)
+
+### Ordenação
+
+- Ordenar por nome (`sortBy=name:ASC`)
+- Ordenar por preço (`sortBy=effectivePrice:DESC`)
+- Ordenar por estoque (`sortBy=stock:ASC`)
+- Ordenar por data de criação (`sortBy=created_at:DESC`)
+
+### Paginação
+
+- Limite por página (`limit=10`)
+- Número da página (`page=1`)
+- Informações de meta (total de itens, total de páginas)
+
+## Tecnologias
+
+- React
+- TypeScript
+- Tailwind CSS
+- Material UI Icons
+- Vite

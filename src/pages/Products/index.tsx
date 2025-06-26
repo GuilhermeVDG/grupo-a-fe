@@ -1,96 +1,94 @@
-import { useState, useMemo } from "react";
-import { ShoppingBag } from "lucide-react";
-import { FilterBar } from "../../components/FilterBar";
-import { SearchBar } from "../../components/SearchBar";
-import { CreateProductBtn } from "../../components/CreateProductBtn";
-import { ProductsTable } from "../../components/ProductsTable";
-import { DiscountModal } from "../../components/DiscountModal";
+import { useEffect, useState } from "react";
 import { useProducts } from "../../context/ProductsContext";
+import { ProductsTable } from "../../components/ProductsTable";
+import { CreateProductBtn } from "../../components/CreateProductBtn";
+import { DiscountModal } from "../../components/DiscountModal";
+import type { RawProduct } from "../../services/ProductService";
 import { useNavigate } from "react-router-dom";
 
-export type Product = {
-  id: string;
-  name: string;
-  description: string;
-  category: string;
-  price: number;
-  stock: number;
-  discountPct?: number;
-  discountedPrice?: number;
-};
+export function Products() {
+  const {
+    products,
+    refreshProducts,
+    deleteProduct,
+    applyCouponDiscount,
+    applyPercentDiscount,
+    removeDiscount,
+  } = useProducts();
 
-export default function ProductsPage() {
-  const { products, updateProduct, deleteProduct } = useProducts();
-
-  const [filters, setFilters] = useState<{ min?: number; max?: number }>({});
-  const [searchTerm, setSearchTerm] = useState("");
   const [discountOpen, setDiscountOpen] = useState(false);
-  const [currentProduct, setCurrentProduct] = useState<Product | null>(null);
+  const [currentProduct, setCurrentProduct] = useState<RawProduct | null>(null);
   const navigate = useNavigate();
 
-  const handleOpenDiscount = (p: Product) => {
+  useEffect(() => {
+    refreshProducts();
+  }, [refreshProducts]);
+
+  const handleOpenDiscount = (p: RawProduct) => {
     setCurrentProduct(p);
     setDiscountOpen(true);
   };
+
   const handleCloseDiscount = () => {
-    setDiscountOpen(false);
     setCurrentProduct(null);
+    setDiscountOpen(false);
   };
-  const handleApplyDiscount = (_type: any, pct: number) => {
+
+  const handleApplyCoupon = async (couponCode: string) => {
     if (!currentProduct) return;
-    const discounted = Number(currentProduct.price * (1 - pct / 100));
-    updateProduct({
-      ...currentProduct,
-      discountPct: pct,
-      discountedPrice: discounted,
-    });
+    await applyCouponDiscount(currentProduct.id.toString(), couponCode);
     handleCloseDiscount();
   };
 
-  const filtered = useMemo(
-    () =>
-      products
-        .filter(
-          (p) =>
-            (filters.min == null || p.price >= filters.min) &&
-            (filters.max == null || p.price <= filters.max)
-        )
-        .filter((p) => p.name.toLowerCase().includes(searchTerm.toLowerCase())),
-    [filters, searchTerm, products]
-  );
+  const handleApplyPercent = async (percent: number) => {
+    if (!currentProduct) return;
+    await applyPercentDiscount(currentProduct.id.toString(), percent);
+    handleCloseDiscount();
+  };
+
+  const handleRemoveDiscount = async () => {
+    if (!currentProduct) return;
+    await removeDiscount(currentProduct.id.toString());
+    handleCloseDiscount();
+  };
+
+  const handleDelete = async (product: RawProduct) => {
+    if (
+      window.confirm(`Deseja realmente excluir o produto "${product.name}"?`)
+    ) {
+      try {
+        await deleteProduct(product.id.toString());
+      } catch (e) {
+        alert("Erro ao excluir produto");
+      }
+    }
+  };
 
   return (
-    <>
-      <div className="p-6 space-y-6">
-        <div className="flex items-center gap-2">
-          <ShoppingBag size={32} strokeWidth={1.5} />
-          <h1 className="text-3xl font-semibold">Produtos</h1>
-        </div>
-
-        <div className="flex items-center justify-between">
-          <FilterBar
-            onChange={(f) => setFilters((prev) => ({ ...prev, ...f }))}
-            onApply={() => {}}
-          />
-          <div className="flex items-center gap-4">
-            <SearchBar value={searchTerm} onChange={setSearchTerm} />
-            <CreateProductBtn onClick={() => navigate("/produtos/create")} />
-          </div>
-        </div>
-
-        <ProductsTable
-          products={filtered}
-          onDiscount={handleOpenDiscount}
-          onDelete={(p) => deleteProduct(p.id)}
-        />
+    <div className="flex flex-col gap-4 p-4">
+      <div className="flex justify-between items-center">
+        <h1 className="text-2xl font-bold">Produtos</h1>
+        <CreateProductBtn onClick={() => navigate("/produtos/create")} />
       </div>
 
-      <DiscountModal
-        open={discountOpen}
-        product={currentProduct}
-        onClose={handleCloseDiscount}
-        onApply={handleApplyDiscount}
+      <ProductsTable
+        products={products}
+        onDiscount={handleOpenDiscount}
+        onDelete={handleDelete}
       />
-    </>
+
+      {currentProduct && (
+        <DiscountModal
+          open={discountOpen}
+          onClose={handleCloseDiscount}
+          onApplyCoupon={handleApplyCoupon}
+          onApplyPercent={handleApplyPercent}
+          onRemoveDiscount={handleRemoveDiscount}
+          product={currentProduct}
+        />
+      )}
+    </div>
   );
 }
+
+export default Products;

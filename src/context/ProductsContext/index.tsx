@@ -1,69 +1,136 @@
-import { createContext, useContext, useState, useEffect } from "react";
-import type { ReactNode } from "react";
-import type { Product } from "../../pages/Products";
+import React, { createContext, useContext, useState, useCallback } from "react";
+import type { RawProduct } from "../../services/ProductService";
 import {
-  fetchProducts as fetchProductsAPI,
-  type RawProduct,
+  fetchProducts,
+  createProduct,
+  updateProduct,
+  deleteProduct,
+  restoreProduct,
+  applyCouponDiscount,
+  applyPercentDiscount,
+  removeDiscount,
 } from "../../services/ProductService";
 
-interface ProductsContextData {
-  products: Product[];
-  createProduct: (newProduct: Product) => void;
-  updateProduct: (updated: Product) => void;
-  deleteProduct: (id: string) => void;
+interface ProductsContextType {
+  products: RawProduct[];
+  loading: boolean;
+  refreshProducts: () => Promise<void>;
+  createProduct: (product: Partial<RawProduct>) => Promise<void>;
+  updateProduct: (id: string, product: Partial<RawProduct>) => Promise<void>;
+  deleteProduct: (id: string) => Promise<void>;
+  restoreProduct: (id: string) => Promise<void>;
+  applyCouponDiscount: (id: string, couponCode: string) => Promise<void>;
+  applyPercentDiscount: (id: string, percent: number) => Promise<void>;
+  removeDiscount: (id: string) => Promise<void>;
 }
 
-const ProductsContext = createContext<ProductsContextData | undefined>(
+const ProductsContext = createContext<ProductsContextType | undefined>(
   undefined
 );
 
-export function ProductsProvider({ children }: { children: ReactNode }) {
-  const [products, setProducts] = useState<Product[]>([]);
+export function ProductsProvider({ children }: { children: React.ReactNode }) {
+  const [products, setProducts] = useState<RawProduct[]>([]);
+  const [loading, setLoading] = useState(false);
 
-  useEffect(() => {
-    async function load() {
-      try {
-        const raw: RawProduct[] = await fetchProductsAPI();
-        const mapped: Product[] = raw.map((r) => ({
-          id: String(r.id),
-          name: r.name,
-          description: r.description,
-          category: "",
-          price: parseFloat(r.price),
-          stock: r.stock,
-          discountPct:
-            r.discountType === "percent"
-              ? Number(r.discount)
-              : Math.round(
-                  ((parseFloat(r.price) - r.discountPrice) /
-                    parseFloat(r.price)) *
-                    100
-                ),
-          discountedPrice: Number(r.discountPrice),
-        }));
-        setProducts(mapped);
-      } catch (e) {
-        console.error("Erro ao carregar produtos", e);
-      }
+  const refreshProducts = useCallback(async () => {
+    try {
+      setLoading(true);
+      const response = await fetchProducts();
+      setProducts(response.data);
+    } catch (error) {
+      console.error("Erro ao buscar produtos:", error);
+    } finally {
+      setLoading(false);
     }
-    load();
   }, []);
 
-  const createProduct = (newProduct: Product) => {
-    setProducts((prev) => [...prev, newProduct]);
+  const handleCreateProduct = async (product: Partial<RawProduct>) => {
+    try {
+      await createProduct(product);
+      await refreshProducts();
+    } catch (error) {
+      console.error("Erro ao criar produto:", error);
+      throw error;
+    }
   };
 
-  const updateProduct = (updated: Product) => {
-    setProducts((prev) => prev.map((p) => (p.id === updated.id ? updated : p)));
+  const handleUpdateProduct = async (
+    id: string,
+    product: Partial<RawProduct>
+  ) => {
+    try {
+      await updateProduct(id, product);
+      await refreshProducts();
+    } catch (error) {
+      console.error("Erro ao atualizar produto:", error);
+      throw error;
+    }
   };
 
-  const deleteProduct = (id: string) => {
-    setProducts((prev) => prev.filter((p) => p.id !== id));
+  const handleDeleteProduct = async (id: string) => {
+    try {
+      await deleteProduct(id);
+      await refreshProducts();
+    } catch (error) {
+      console.error("Erro ao deletar produto:", error);
+      throw error;
+    }
+  };
+
+  const handleRestoreProduct = async (id: string) => {
+    try {
+      await restoreProduct(id);
+      await refreshProducts();
+    } catch (error) {
+      console.error("Erro ao restaurar produto:", error);
+      throw error;
+    }
+  };
+
+  const handleApplyCouponDiscount = async (id: string, couponCode: string) => {
+    try {
+      await applyCouponDiscount(id, couponCode);
+      await refreshProducts();
+    } catch (error) {
+      console.error("Erro ao aplicar cupom:", error);
+      throw error;
+    }
+  };
+
+  const handleApplyPercentDiscount = async (id: string, percent: number) => {
+    try {
+      await applyPercentDiscount(id, percent);
+      await refreshProducts();
+    } catch (error) {
+      console.error("Erro ao aplicar desconto percentual:", error);
+      throw error;
+    }
+  };
+
+  const handleRemoveDiscount = async (id: string) => {
+    try {
+      await removeDiscount(id);
+      await refreshProducts();
+    } catch (error) {
+      console.error("Erro ao remover desconto:", error);
+      throw error;
+    }
   };
 
   return (
     <ProductsContext.Provider
-      value={{ products, createProduct, updateProduct, deleteProduct }}
+      value={{
+        products,
+        loading,
+        refreshProducts,
+        createProduct: handleCreateProduct,
+        updateProduct: handleUpdateProduct,
+        deleteProduct: handleDeleteProduct,
+        restoreProduct: handleRestoreProduct,
+        applyCouponDiscount: handleApplyCouponDiscount,
+        applyPercentDiscount: handleApplyPercentDiscount,
+        removeDiscount: handleRemoveDiscount,
+      }}
     >
       {children}
     </ProductsContext.Provider>
@@ -71,7 +138,9 @@ export function ProductsProvider({ children }: { children: ReactNode }) {
 }
 
 export function useProducts() {
-  const ctx = useContext(ProductsContext);
-  if (!ctx) throw new Error("useProducts must be used within ProductsProvider");
-  return ctx;
+  const context = useContext(ProductsContext);
+  if (context === undefined) {
+    throw new Error("useProducts must be used within a ProductsProvider");
+  }
+  return context;
 }
