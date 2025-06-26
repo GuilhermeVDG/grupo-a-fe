@@ -4,6 +4,7 @@ import HomePage from "../../pages/Home";
 import ProductsPage from "../../pages/Products";
 import ReportPage from "../../pages/Reports";
 import AdmPage from "../../pages/AdmPage";
+import CreateProductPage from "../../components/CreateProduct";
 
 export function Router() {
   return (
@@ -13,6 +14,7 @@ export function Router() {
 
         <Route path="produtos">
           <Route index element={<ProductsPage />} />
+          <Route path="create" element={<CreateProductPage />} />
         </Route>
 
         <Route path="relatorios" element={<ReportPage />} />
